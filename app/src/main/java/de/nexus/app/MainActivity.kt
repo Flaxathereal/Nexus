@@ -33,6 +33,10 @@ import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 import android.os.Handler
 import android.os.Looper
+import org.vosk.Model
+import org.vosk.Recognizer
+import org.vosk.android.SpeechService
+import org.vosk.android.RecognitionListener
 
 class Memory(c: Context, path: String) : SQLiteOpenHelper(c, path, null, 1) {
     override fun onCreate(db: SQLiteDatabase) {
@@ -62,6 +66,8 @@ class MainActivity : Activity() {
     private var tts: TextToSpeech? = null
     private var llm: LlmInference? = null
     private var camUri: Uri? = null
+    private var voskModel: Model? = null
+    private var speechService: SpeechService? = null
     private lateinit var colView: LinearLayout
     private val btns = ArrayList<Button>()
     @Volatile private var started = false
@@ -72,6 +78,7 @@ class MainActivity : Activity() {
     private val inbox = File(root, "inbox")
     private val done = File(root, "verarbeitet")
     private val modelFile = File(root, "model.task")
+    private val voskDir = File(root, "voskmodel")
     private val base = "Du bist Nexus, eine persönliche KI auf dem Handy deines Nutzers. Antworte immer auf Deutsch, kurz und klar. " +
         "Wenn du etwas nicht weißt oder nicht weiterkommst, beginne deine Antwort mit 'FRAGE:' und bitte den Nutzer um Hilfe oder Dateien."
 
@@ -95,9 +102,37 @@ class MainActivity : Activity() {
         send.setOnClickListener { submit() }
         input.setOnEditorActionListener { _, _, _ -> submit(); true }
         mic.setOnClickListener {
-            val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "de-DE")
-            try { startActivityForResult(i, 1) } catch (e: Exception) { say("Nexus", "Spracheingabe nicht verfügbar.") }
+            if (voskModel == null) {
+                say("Nexus", "Offline-Spracherkennung ist nicht geladen. Leg den entpackten Ordner 'voskmodel' in Documents/Nexus und starte die App neu.")
+            } else if (speechService == null) {
+                try {
+                    val rec = Recognizer(voskModel, 16000.0f)
+                    val svc = SpeechService(rec, 16000.0f)
+                    speechService = svc
+                    mic.text = "⏹"
+                    svc.startListening(object : RecognitionListener {
+                        override fun onPartialResult(hypothesis: String?) {}
+                        override fun onResult(hypothesis: String?) {}
+                        override fun onFinalResult(hypothesis: String?) {
+                            val text = try { org.json.JSONObject(hypothesis ?: "{}").optString("text") } catch (e: Exception) { "" }
+                            speechService?.stop(); speechService = null
+                            runOnUiThread { mic.text = "🎤" }
+                            if (text.isNotBlank()) runOnUiThread { input.setText(text); submit() }
+                        }
+                        override fun onError(e: Exception?) {
+                            speechService?.stop(); speechService = null
+                            runOnUiThread { mic.text = "🎤" }
+                            say("Nexus", "Spracherkennung-Fehler: ${e?.message}")
+                        }
+                        override fun onTimeout() {
+                            speechService?.stop(); speechService = null
+                            runOnUiThread { mic.text = "🎤" }
+                        }
+                    })
+                } catch (e: Throwable) { say("Nexus", "Mikrofon-Fehler: ${e.message}"); speechService = null; mic.text = "🎤" }
+            } else {
+                speechService?.stop(); speechService = null; mic.text = "🎤"
+            }
         }
         cam.setOnClickListener {
             try {
@@ -152,6 +187,9 @@ class MainActivity : Activity() {
                 say("Nexus", "Ich lade mein Sprachmodell, einen Moment …")
                 llm = LlmInference.createFromOptions(this, LlmInference.LlmInferenceOptions.builder()
                     .setModelPath(modelFile.path).setMaxTokens(512).build())
+                if (voskDir.exists()) {
+                    try { voskModel = Model(voskDir.path) } catch (e: Throwable) { say("Nexus", "Offline-Spracherkennung konnte nicht geladen werden: ${e.message}") }
+                }
                 say("Nexus", "Ich bin bereit. Tipp /hilfe für meine Befehle."); checkUpdate()
             } catch (e: Throwable) { say("Nexus", "Fehler beim Start: ${e.message}"); started = false }
         }
