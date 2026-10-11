@@ -295,7 +295,7 @@ class MainActivity : Activity() {
 
     private fun design(wish: String) {
         var err = ""
-        for (i in 1..3) {
+        for (i in 1..1) {
             val s = gen("Antworte NUR mit JSON, ohne Erklärung und ohne Backticks, genau mit den Feldern bg, text, accent (Farben als #RRGGBB) und size (Zahl 12 bis 28). Text und Hintergrund brauchen starken Kontrast. Wunsch für das Aussehen: $wish" +
                 (if (err.isNotEmpty()) "\nDein letzter Versuch scheiterte: $err" else "")).replace("```json", "").replace("```", "").trim()
             val e = validTheme(s)
@@ -329,7 +329,7 @@ class MainActivity : Activity() {
     private fun learn(wish: String) {
         var err = ""; var code = ""
         say("Nexus", "Ich schreibe eine neue Fähigkeit und teste sie …")
-        for (i in 1..3) {
+        for (i in 1..1) {
             val p = "Schreibe eine JavaScript-Fähigkeit für eine Android-KI. Antworte NUR mit Code, ohne Erklärung und ohne Backticks.\n" +
                 "Format:\n// name: kleinbuchstaben_name\n// beschreibung: ein Satz\nfunction run(arg) { /* gibt einen String zurück */ }\nfunction test() { return run('test') != null; }\n" +
                 "Verfügbar: host.httpGet(url), host.readFile(pfad), host.writeFile(pfad, text), host.remember(text), host.recall(suche). Kein import, kein require, kein fetch.\nWunsch: $wish" +
