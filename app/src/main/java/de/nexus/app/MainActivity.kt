@@ -195,7 +195,7 @@ class MainActivity : Activity() {
 
     private fun ingest(f: File) {
         val text = f.readText()
-        val chunks = text.chunked(3000)
+        val chunks = text.chunked(1200)
         say("Nexus", "Lese ${f.name} (${chunks.size} Abschnitt(e)) und lerne daraus …")
         chunks.forEachIndexed { i, chunk ->
             say("Nexus", "Verarbeite Abschnitt ${i+1} von ${chunks.size} aus ${f.name} …")
@@ -368,7 +368,15 @@ class MainActivity : Activity() {
     }
 
     private fun say(who: String, text: String) = runOnUiThread {
-        log.append("$who: $text\n\n"); scroll.post { scroll.fullScroll(ScrollView.FOCUS_DOWN) }
+        log.append("$who: $text\n\n")
+        val maxChars = 8000
+        if (log.length() > maxChars) {
+            val s = log.text.toString()
+            val cut = s.length - maxChars
+            val nl = s.indexOf('\n', cut).let { if (it >= 0) it + 1 else cut }
+            log.text = s.substring(nl)
+        }
+        scroll.post { scroll.fullScroll(ScrollView.FOCUS_DOWN) }
         scheduleIdle()
     }
 
