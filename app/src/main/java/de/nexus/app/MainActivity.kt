@@ -151,7 +151,7 @@ class MainActivity : Activity() {
                 }
                 say("Nexus", "Ich lade mein Sprachmodell, einen Moment …")
                 llm = LlmInference.createFromOptions(this, LlmInference.LlmInferenceOptions.builder()
-                    .setModelPath(modelFile.path).setMaxTokens(512).build())
+    .setModelPath(modelFile.path).setMaxTokens(512).build())
                 say("Nexus", "Ich bin bereit. Tipp /hilfe für meine Befehle."); checkUpdate()
             } catch (e: Throwable) { say("Nexus", "Fehler beim Start: ${e.message}"); started = false }
         }
