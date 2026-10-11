@@ -48,7 +48,7 @@ class Memory(c: Context, path: String) : SQLiteOpenHelper(c, path, null, 1) {
         readableDatabase.rawQuery("SELECT txt FROM mem ORDER BY id DESC LIMIT 300", null).use { while (it.moveToNext()) all.add(it.getString(0)) }
         val best = all.drop(4).map { m -> m to words.count { m.lowercase().contains(it) } }
             .filter { it.second > 0 }.sortedByDescending { it.second }.take(5).map { it.first }
-ff        return (best + all.take(4)).distinct()
+        return (best + all.take(4)).distinct()
     }
 }
 
