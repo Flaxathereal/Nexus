@@ -12,7 +12,7 @@ android {
     }
 }
 dependencies {
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    implementation("com.google.mediapipe:tasks-genai:0.10.24")
     implementation("org.mozilla:rhino:1.7.14")
     implementation("com.google.mlkit:image-labeling:17.0.8")
     implementation("com.google.mlkit:text-recognition:16.0.1")
