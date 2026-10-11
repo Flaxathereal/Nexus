@@ -1,6 +1,7 @@
 package de.nexus.app
 
 import org.mozilla.javascript.*
+import org.mozilla.javascript.Function as RhinoFunction
 import java.io.File
 import java.net.URL
 
@@ -44,7 +45,7 @@ class SkillEngine(private val root: File, private val mem: Memory) {
             ScriptableObject.putProperty(scope, "host", Context.javaToJS(Host(root, mem, test), scope))
             cx.evaluateString(scope, code, "skill", 1, null)
             val f = scope.get(fn, scope)
-            if (f !is Function) throw IllegalStateException("Funktion $fn fehlt")
+            if (f !is RhinoFunction) throw IllegalStateException("Funktion $fn fehlt")
             val args: Array<Any?> = if (arg == null) emptyArray() else arrayOf(arg)
             return Context.toString(f.call(cx, scope, scope, args))
         } finally { Context.exit() }
